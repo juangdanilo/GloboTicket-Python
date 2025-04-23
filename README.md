@@ -1,3 +1,5 @@
+# REST API with FastApi and SQLAlchemy as ORM
+
 Globoticket is a REST API built with Python 3 and FastAPI for managing event listings and ticket purchases. This project includes a SQL database backend, API endpoints for event management, and a web frontend for user interaction.
 
 ## Features
