@@ -1,19 +1,17 @@
-"""
-conftest.py
----
-
-Fixtures for pytest.
-"""
 from datetime import date
+from pathlib import Path
+from typing import Generator
+from unittest.mock import patch
 
 import pytest
 import sqlalchemy
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
-from starlette.testclient import TestClient
 
 from globoticket.api import app, get_session
 from globoticket.models import Base, DBCategory, DBEvent
 
+# Configuración de la base de datos en memoria para pruebas
 test_db = sqlalchemy.create_engine(
     "sqlite+pysqlite:///:memory:",
     connect_args={"check_same_thread": False},
@@ -23,8 +21,8 @@ test_db = sqlalchemy.create_engine(
 test_sessionmaker = sessionmaker(bind=test_db)
 
 
-def setup_test_db():
-    """Create tables and test data in test db."""
+def setup_test_db() -> None:
+    """Crea tablas y datos de prueba en la base de datos."""
     Base.metadata.create_all(bind=test_db)
     session = Session(test_db)
     cat = DBCategory(name="t")
@@ -34,9 +32,9 @@ def setup_test_db():
     session.commit()
 
 
-def get_test_session():
-    """Create a db session for a single test.
-    After the test: close the session and drop all tables."""
+def get_test_session() -> Generator[Session, None, None]:
+    """Crea una sesión de base de datos para una prueba.
+    Después de la prueba: cierra la sesión y elimina todas las tablas."""
     setup_test_db()
     session = test_sessionmaker()
     try:
@@ -47,10 +45,20 @@ def get_test_session():
 
 
 @pytest.fixture()
-def client():
-    """Create a TestClient that uses the test database."""
-
-    # See: https://fastapi.tiangolo.com/advanced/testing-database/
+def client() -> Generator[TestClient, None, None]:
+    """Crea un TestClient que utiliza la base de datos de prueba."""
     app.dependency_overrides[get_session] = get_test_session
-    yield TestClient(app)
-    del app.dependency_overrides[get_session]
+    try:
+        yield TestClient(app)
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def test_frontmatter() -> Generator[None, None, None]:
+    """Sobrescribe la ubicación de los archivos frontmatter."""
+    with patch(
+        "globoticket.frontmatter.FRONTMATTER_DIRECTORY",
+        new=Path(__file__).parent / "product_info",
+    ):
+        yield
