@@ -70,4 +70,28 @@ Run tests with:
 ```bash
 poetry run pytest
 ```
+Test coverage includes:
 
+- API endpoint validation
+- Database operations
+- Error handling
+
+## Frontend Features
+
+- Catalog view of all events
+- Event detail pages
+- Dynamic content loading via AJAX
+
+## Development Tools
+
+- Pre-commit hooks for:
+  - Black code formatting
+  - Flake8 linting
+  - mypy type checking
+  - isort import sorting
+  - SQLAlchemy ORM
+  - pytest with test database fixtures
+
+## License
+
+This project is released under The Unlicense - free for any use.
